@@ -99,13 +99,48 @@ class WinCMakeLists {
 		# Device Server generation
 		#
 		set(SERVER_NAME «cls.name»)
-		add_executable(«cls.name» ${SERVER_SRC})
-		target_link_libraries(«cls.name» PUBLIC ${TANGO_LIBS} ${WIN_LIBS} ${ZMQ_LIB})
-		# Cpack target
-		install(TARGETS «cls.name»
+		
+		if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		add_executable(«cls.name»_dyn_d ${SERVER_SRC})
+		target_link_libraries(«cls.name»_dyn_d PUBLIC ${TANGO_DYN_LIBS_D} ${WIN_LIBS} ${ZMQ_LIB_DYN_D})
+		install(TARGETS «cls.name»_dyn_d 
 			RUNTIME DESTINATION bin
 			LIBRARY DESTINATION bin
 			ARCHIVE DESTINATION bin)
+		set_property(TARGET «cls.name»_dyn_d PROPERTY COMPILE_DEFINITIONS "LOG4TANGO_HAS_DLL;TANGO_HAS_DLL;")
+		set_property(TARGET  «cls.name»_dyn_d PROPERTY LINK_FLAGS "/force:multiple")
+		add_compile_options(/MTd)
+		add_executable(«cls.name»_d ${SERVER_SRC})
+		target_link_libraries(«cls.name»_d PUBLIC ${TANGO_STA_LIBS_D} ${WIN_LIBS} ${ZMQ_LIB_STA_D})
+		target_compile_options(«cls.name»_d PUBLIC "/MTd")
+		install(TARGETS «cls.name»_d 
+			RUNTIME DESTINATION bin
+			LIBRARY DESTINATION bin
+			ARCHIVE DESTINATION bin)
+
+		set_property(TARGET «cls.name»_d PROPERTY COMPILE_DEFINITIONS "_WINSTATIC;")
+		set_property(TARGET «cls.name»_d PROPERTY LINK_FLAGS "/force:multiple")
+		else()
+		add_executable(«cls.name»_dyn ${SERVER_SRC})
+		target_link_libraries(«cls.name»_dyn PUBLIC ${TANGO_DYN_LIBS} ${WIN_LIBS} ${ZMQ_LIB_DYN})
+		install(TARGETS «cls.name»_dyn 
+			RUNTIME DESTINATION bin
+			LIBRARY DESTINATION bin
+			ARCHIVE DESTINATION bin)
+		set_property(TARGET «cls.name»_dyn PROPERTY COMPILE_DEFINITIONS "LOG4TANGO_HAS_DLL;TANGO_HAS_DLL;")
+		set_property(TARGET  «cls.name»_dyn PROPERTY LINK_FLAGS "/force:multiple")
+		add_compile_options(/MT)
+		add_executable(«cls.name» ${SERVER_SRC})
+		target_link_libraries(«cls.name» PUBLIC ${TANGO_STA_LIBS} ${WIN_LIBS} ${ZMQ_LIB_STA})
+		target_compile_options(«cls.name» PUBLIC "/MT")
+		install(TARGETS «cls.name» 
+			RUNTIME DESTINATION bin
+			LIBRARY DESTINATION bin
+			ARCHIVE DESTINATION bin)
+
+		set_property(TARGET «cls.name» PROPERTY COMPILE_DEFINITIONS "_WINSTATIC;")
+		set_property(TARGET «cls.name» PROPERTY LINK_FLAGS "/force:multiple")
+		endif()
 	'''
 //		«cls.makefileIncludes»
 
@@ -124,10 +159,12 @@ class WinCMakeLists {
 
 		# definitions and compile options
 		add_definitions(-DWIN32)
-		add_definitions(-D_WINDLL)
+		
+		if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		add_definitions(-DDEBUG)
+		else()
 		add_definitions(-DNDEBUG)
-		add_definitions(-DTANGO_HAS_DLL)
-		add_definitions(-DLOG4TANGO_HAS_DLL)
+		endif()
 		if(CMAKE_CL_64)
 		add_definitions(-D_64BITS)
 		if(MSVC14)
@@ -141,16 +178,32 @@ class WinCMakeLists {
 		# link directories
 		set(TANGO_LNK_DIR "$ENV{TANGO_ROOT}/bin;$ENV{TANGO_ROOT}/lib")
 		# link files
-		set(TANGO_LIBS "$ENV{TANGO_ROOT}/lib/tango.lib;$ENV{TANGO_ROOT}/bin/omniORB4_rt.lib;$ENV{TANGO_ROOT}/bin/omniDynamic4_rt.lib;$ENV{TANGO_ROOT}/bin/COS4_rt.lib;$ENV{TANGO_ROOT}/bin/omnithread_rt.lib;$ENV{TANGO_ROOT}/bin/msvcstub.lib;$ENV{TANGO_ROOT}/lib/pthreadVC2.lib")
+
+		set(TANGO_STA_LIBS "$ENV{TANGO_ROOT}/lib/libtango.lib;$ENV{TANGO_ROOT}/lib/omniORB4.lib;$ENV{TANGO_ROOT}/lib/omniDynamic4.lib;$ENV{TANGO_ROOT}/lib/COS4.lib;$ENV{TANGO_ROOT}/lib/omnithread.lib;$ENV{TANGO_ROOT}/bin/msvcstub.lib;$ENV{TANGO_ROOT}/lib/pthreadVC2-s.lib")
+		set(TANGO_DYN_LIBS "$ENV{TANGO_ROOT}/lib/tango.lib;$ENV{TANGO_ROOT}/bin/omniORB4_rt.lib;$ENV{TANGO_ROOT}/bin/omniDynamic4_rt.lib;$ENV{TANGO_ROOT}/bin/COS4_rt.lib;$ENV{TANGO_ROOT}/bin/omnithread_rt.lib;$ENV{TANGO_ROOT}/bin/msvcstub.lib;$ENV{TANGO_ROOT}/lib/pthreadVC2.lib")
+		set(TANGO_STA_LIBS_D "$ENV{TANGO_ROOT}/lib/libtangod.lib;$ENV{TANGO_ROOT}/lib/omniORB4d.lib;$ENV{TANGO_ROOT}/lib/omniDynamic4d.lib;$ENV{TANGO_ROOT}/lib/COS4d.lib;$ENV{TANGO_ROOT}/lib/omnithreadd.lib;$ENV{TANGO_ROOT}/bin/msvcstubd.lib;$ENV{TANGO_ROOT}/lib/pthreadVC2-sd.lib")
+		set(TANGO_DYN_LIBS_D "$ENV{TANGO_ROOT}/lib/tangod.lib;$ENV{TANGO_ROOT}/bin/omniORB4_rtd.lib;$ENV{TANGO_ROOT}/bin/omniDynamic4_rtd.lib;$ENV{TANGO_ROOT}/bin/COS4_rtd.lib;$ENV{TANGO_ROOT}/bin/omnithread_rtd.lib;$ENV{TANGO_ROOT}/bin/msvcstubd.lib;$ENV{TANGO_ROOT}/lib/pthreadVC2d.lib")
 		set(WIN_LIBS ws2_32 mswsock advapi32 comctl32 odbc32)
 		if(MSVC90)
-			set(ZMQ_LIB $ENV{TANGO_ROOT}/lib/libzmq-v90-mt-4_1_7.lib)
+		    set(ZMQ_LIB_STA $ENV{TANGO_ROOT}/lib/libzmq-v90-mt-s-4_0_5.lib)
+		    set(ZMQ_LIB_DYN $ENV{TANGO_ROOT}/lib/libzmq-v90-mt-4_0_5.lib)
+		    set(ZMQ_LIB_STA_D $ENV{TANGO_ROOT}/lib/libzmq-v90-mt-sgt-4_0_5.lib)
+		    set(ZMQ_LIB_DYN_D $ENV{TANGO_ROOT}/lib/libzmq-v90-mt-gt-4_0_5.lib)
 		elseif(MSVC10)
-			set(ZMQ_LIB $ENV{TANGO_ROOT}/lib/libzmq-v100-mt-4_1_7.lib)
+		    set(ZMQ_LIB_STA $ENV{TANGO_ROOT}/lib/libzmq-v100-mt-s-4_0_5.lib)
+		    set(ZMQ_LIB_DYN $ENV{TANGO_ROOT}/lib/libzmq-v100-mt-4_0_5.lib)
+		    set(ZMQ_LIB_STA_D $ENV{TANGO_ROOT}/lib/libzmq-v100-mt-sgd-4_0_5.lib)
+		    set(ZMQ_LIB_DYN_D $ENV{TANGO_ROOT}/lib/libzmq-v100-mt-gd-4_0_5.lib)
 		elseif(MSVC12)
-			set(ZMQ_LIB $ENV{TANGO_ROOT}/lib/libzmq-v120-mt-4_1_7.lib)
+		    set(ZMQ_LIB_STA $ENV{TANGO_ROOT}/lib/libzmq-v120-mt-s-4_0_5.lib)
+		    set(ZMQ_LIB_DYN $ENV{TANGO_ROOT}/lib/libzmq-v120-mt-4_0_5.lib)
+		    set(ZMQ_LIB_STA_D $ENV{TANGO_ROOT}/lib/libzmq-v120-mt-sgd-4_0_5.lib)
+		    set(ZMQ_LIB_DYN_D $ENV{TANGO_ROOT}/lib/libzmq-v120-mt-gd-4_0_5.lib)
 		elseif(MSVC14)
-			set(ZMQ_LIB $ENV{TANGO_ROOT}/lib/libzmq-v140-mt-4_1_7.lib)
+		    set(ZMQ_LIB_STA $ENV{TANGO_ROOT}/lib/libzmq-v140-mt-s-4_0_5.lib)
+		    set(ZMQ_LIB_DYN $ENV{TANGO_ROOT}/lib/libzmq-v140-mt-4_0_5.lib)
+		    set(ZMQ_LIB_STA_D $ENV{TANGO_ROOT}/lib/libzmq-v140-mt-sgd-4_0_5.lib)
+		    set(ZMQ_LIB_DYN_D $ENV{TANGO_ROOT}/lib/libzmq-v140-mt-gd-4_0_5.lib)
 		endif(MSVC90)
 
 		#easy packagin with cpack and NSIS
@@ -167,7 +220,7 @@ class WinCMakeLists {
 		set(CPACK_NSIS_MODIFY_PATH ON)
 		set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 		set(CPACK_NSIS_MENU_LINKS
-			"http://tango-controls.readthedocs.io/en/latest/" "Tango Doc")
+		    "http://tango-controls.readthedocs.io/en/latest/" "Tango Doc")
 
 		include(CPack)
 	'''
