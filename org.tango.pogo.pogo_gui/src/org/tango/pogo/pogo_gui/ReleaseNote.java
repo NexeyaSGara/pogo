@@ -16,7 +16,22 @@ public interface ReleaseNote {
 		"<body text=\"#000000\" bgColor=\"#FFFFFF\" link=\"#0000FF\" vLink=\"#7F00FF\" aLink=\"#FF0000\">\n" + 
 		"<p><!-------TITLE------></p>\n" + 
 		"<center>	<h2>Pogo Release Notes </h2>\n" + 
-		"	(Generated 19-04-2017  13:36:12)</center><br>\n" + 
+		"	(Generated 09-10-2017  13:02:52)</center><br>\n" + 
+		"<li><b>Pogo-9.6.3 - 09/10/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; Fix a NPE in AttributeDialog.java<br>" + 
+		"<li><b>Pogo-9.6.2 - 06/10/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; Allow to generate ENUM attribute as spectrum and image in C++.<br>" + 
+		"<li><b>Pogo-9.6.1 - 25/09/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; Fix a NPE in PyHL new class creation.<br>" + 
+		"<li><b>Pogo-9.6.0 - 15/09/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; PyHL package is now memorized for next reload/generate action.<br>" + 
+		"&nbsp; &nbsp; &nbsp; Fix bug in Pogo command line.<br>" + 
+		"<li><b>Pogo-9.5.2 - 12/08/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; CMakeList added for widows (thanks to Sebastien)<br>" + 
+		"<li><b>Pogo-9.5.1 - 10/08/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; Add release notes and remove unused files.<br>" + 
+		"<li><b>Pogo-9.5.0 - 09/08/2017:</b><br>" + 
+		"&nbsp; &nbsp; &nbsp; Mavenized project (thanks to Igor)<br>" + 
 		"<li><b>Pogo-9.4.6a - 19/04/2017:</b><br>" + 
 		"&nbsp; &nbsp; &nbsp; Cosmetic changes<br>" + 
 		"<li><b>Pogo-9.4.6 - 13/01/2017:</b><br>" + 

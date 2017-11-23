@@ -42,6 +42,7 @@ import com.google.inject.Inject
 import org.eclipse.emf.ecore.resource.Resource
 import fr.esrf.tango.pogo.generator.cpp.projects.LinuxMakefile
 import fr.esrf.tango.pogo.generator.cpp.projects.LinuxCMakeLists
+import fr.esrf.tango.pogo.generator.cpp.projects.WinCMakeLists
 import fr.esrf.tango.pogo.generator.cpp.projects.VC12.VC12_Project
 import fr.esrf.tango.pogo.generator.cpp.projects.VC10.VC10_Project
 import fr.esrf.tango.pogo.pogoDsl.PogoMultiClasses
@@ -61,6 +62,7 @@ class CppGenerator implements IGenerator {
 	@Inject	extension Main
 	
 	@Inject	extension LinuxCMakeLists
+	@Inject	extension WinCMakeLists
 	@Inject	extension LinuxMakefile
 	@Inject	extension VC10_Project
 	@Inject	extension VC12_Project
@@ -157,6 +159,11 @@ class CppGenerator implements IGenerator {
 					fsa.generateFile("vc12_proj/Class_lib.vcxproj.filters", cls.generateVC12_Filters)
 					fsa.generateFile("vc12_proj/Class_dll.vcxproj.filters", cls.generateVC12_Filters)
 				}
+				if (cls.description.filestogenerate.contains("WindowsCMakeLists")) {
+					printTrace("Generating CMakeLists.txt")
+					fsa.generateFile("CMakeLists.txt",       cls.generateWinCMakeLists)
+					fsa.generateFile("CmakeTangoWin.cmake",  generateCMakeWinConf)
+				}
 			}
 		}
 		//
@@ -166,22 +173,22 @@ class CppGenerator implements IGenerator {
 			//	Multi class
 			if (multi.filestogenerate.contains("Code files")) {
 				printTrace("Generating MultiClassesFactory.cpp")
-				fsa.generateFile("MultiClassesFactory.cpp",   multi.generateMultiClassesFactoryFile)
+				fsa.generateFile("MultiClassesFactory.cpp",  multi.generateMultiClassesFactoryFile)
 				
 				// Do override the main for simple class if exists
 				if (fileExists(multi.sourcePath + "/main.cpp")==false) {
 					printTrace("Generating main.cpp")
-					fsa.generateFile("main.cpp",                  multi.generateMainFile)
+					fsa.generateFile("main.cpp",   multi.generateMainFile)
 				}
 			}
 
 			if (multi.filestogenerate.contains("Makefile")) {
 				printTrace("Generating Makefile.multi")
-				fsa.generateFile("Makefile.multi",            multi.generateLinuxMakefileMultiClasses)
+				fsa.generateFile("Makefile.multi", multi.generateLinuxMakefileMultiClasses)
 			}
 			if (multi.filestogenerate.contains("CMakeLists")) {
 				printTrace("Generating CMakeLists.txt")
-				fsa.generateFile("CMakeLists.txt",            multi.generateLinuxCMakeListsMultiClasses)
+				fsa.generateFile("CMakeLists.txt", multi.generateLinuxCMakeListsMultiClasses)
 			}
 		}
 	}

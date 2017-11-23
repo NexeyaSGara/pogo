@@ -87,8 +87,9 @@ public class GenerateDialog extends JDialog {
         radioButtons.add(projectBtn);
         radioButtons.add(sphinxBtn);
         radioButtons.add(htmlBtn);
+        radioButtons.add(winCMakeListsBtn);
 
-        //  Check if cmake available (cmake_tango.opt file cane be found)
+        //  Check if cmake available (cmake_tango.opt file can be found)
         String path = PogoProperty.makefileHome;
         String fileName = "/cmake_tango.opt";
         String env = System.getProperty("DEBUG_MAKE");
@@ -97,7 +98,7 @@ public class GenerateDialog extends JDialog {
         }
         else {
             String str = "$(TANGO_HOME)";
-            if (fileName.startsWith(str)) {
+            if (path.startsWith(str)) {
                 String th = System.getenv("TANGO_HOME");
                 if (th == null)
                     th = System.getProperty("TANGO_HOME");
@@ -290,6 +291,14 @@ public class GenerateDialog extends JDialog {
         gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints.insets = new java.awt.Insets(0, 10, 0, 0);
         buttonsPanel.add(generateLabel, gridBagConstraints);
+        
+        winCMakeListsBtn = new JRadioButton();
+        winCMakeListsBtn.setText("WindowsCMakeLists");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.insets = new java.awt.Insets(0, 0, 5, 0);
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 3;
+        buttonsPanel.add(winCMakeListsBtn, gridBagConstraints);
 
         htmlBtn.setText("html Pages");
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -581,7 +590,7 @@ public class GenerateDialog extends JDialog {
 
     //=============================================================
     //=============================================================
-    private String buidDetailsString(List<String> items, String name) {
+    private String buildDetailsString(List<String> items, String name) {
         StringBuilder sb = new StringBuilder();
 
         if (items.size() > 0) {
@@ -604,9 +613,9 @@ public class GenerateDialog extends JDialog {
         List<String> attributes = deviceClass.getAbstractAttributeNames();
 
         String
-                message = buidDetailsString(commands, "command");
+                message = buildDetailsString(commands, "command");
         message += "\n";
-        message += buidDetailsString(attributes, "attribute");
+        message += buildDetailsString(attributes, "attribute");
 
         JOptionPane.showMessageDialog(this,
                 message,
@@ -631,17 +640,17 @@ public class GenerateDialog extends JDialog {
 
     //======================================================
     //======================================================
-    public int showDialog(DeviceClass devclass) {
+    public int showDialog(DeviceClass deviceClass) {
         mode = PogoConst.SINGLE_CLASS;
-        this.deviceClass = devclass;
-        String path = devclass.getPogoDeviceClass().getDescription().getSourcePath();
+        this.deviceClass = deviceClass;
+        String path = deviceClass.getPogoDeviceClass().getDescription().getSourcePath();
         if (path == null || !new File(path).exists())
             path = PogoGUI.homeDir;
         outPathText.setText(path);
         outPathText.setRequestFocusEnabled(true);
         outPathText.requestFocus();
 
-        if (devclass.checkIfAbstractClass()) {
+        if (deviceClass.checkIfAbstractClass()) {
             makefileBtn.setEnabled(false);
             cMakeListsBtn.setEnabled(false);
             vc10Btn.setEnabled(false);
@@ -651,8 +660,9 @@ public class GenerateDialog extends JDialog {
             pyHlProjectBtn.setVisible(false);
             prPythonHLBtn.setVisible(false);
             sphinxBtn.setVisible(false);
+            winCMakeListsBtn.setVisible(false);
         }
-        int lang = Utils.getLanguage(devclass.getPogoDeviceClass().getDescription().getLanguage());
+        int lang = Utils.getLanguage(deviceClass.getPogoDeviceClass().getDescription().getLanguage());
         switch (lang) {
             case PogoConst.Cpp:
                 makefileBtn.setVisible(true);
@@ -667,6 +677,7 @@ public class GenerateDialog extends JDialog {
                 pyHlProjectBtn.setVisible(false);
                 prPythonHLBtn.setVisible(false);
                 sphinxBtn.setVisible(false);
+                winCMakeListsBtn.setVisible(true);
                 break;
             case PogoConst.Java:
                 makefileBtn.setVisible(true);
@@ -681,6 +692,7 @@ public class GenerateDialog extends JDialog {
                 pyHlProjectBtn.setVisible(false);
                 prPythonHLBtn.setVisible(false);
                 sphinxBtn.setVisible(false);
+                winCMakeListsBtn.setVisible(false);
                 break;
             case PogoConst.Python:
                 makefileBtn.setVisible(false);
@@ -694,6 +706,7 @@ public class GenerateDialog extends JDialog {
                 pyHlProjectBtn.setVisible(false);
                 prPythonHLBtn.setVisible(false);
                 sphinxBtn.setVisible(false);
+                winCMakeListsBtn.setVisible(false);
                 break;
             case PogoConst.PythonHL:
                 makefileBtn.setVisible(false);
@@ -707,13 +720,15 @@ public class GenerateDialog extends JDialog {
                 pyHlProjectBtn.setVisible(true);
                 prPythonHLBtn.setVisible(true);
                 sphinxBtn.setVisible(true);
+                winCMakeListsBtn.setVisible(false);
+                pyHlProjectBtn.setSelected(deviceClass.isUsingPyHlPackage());
                 break;
         }
 
 
-        boolean isAbstract = devclass.checkIfAbstractClass();
+        boolean isAbstract = deviceClass.checkIfAbstractClass();
         if (isAbstract)
-            warningLabel.setText(devclass.getPogoDeviceClass().getName() + warningLabel.getText());
+            warningLabel.setText(deviceClass.getPogoDeviceClass().getName() + warningLabel.getText());
         else
             warningPanel.setVisible(false);
 
@@ -737,6 +752,7 @@ public class GenerateDialog extends JDialog {
         linuxLabel.setVisible(false);
         vc10Btn.setVisible(false);
         vc12Btn.setVisible(false);
+        winCMakeListsBtn.setVisible(false);
         docLabel.setVisible(false);
         htmlBtn.setVisible(false);
         makefileBtn.setVisible(true);
@@ -829,12 +845,16 @@ public class GenerateDialog extends JDialog {
         boolean overwriteCMakeLists = false;
         boolean overwriteVC12 = false;
         boolean overwriteVC10 = false;
+        boolean overwriteWinCMakeLists = false;
         boolean generate = false;
         if (makefileBtn.isSelected()) {
             overwriteMakefile = mustBeOverWritten(makefile);
         } else
         if (cMakeListsBtn.isSelected()) {
             overwriteCMakeLists = mustBeOverWritten(cMakeLists);
+        } else 
+        if (winCMakeListsBtn.isSelected()) {
+        	overwriteWinCMakeLists = mustBeOverWritten(cMakeLists);
         } else
             generate = true;
         if (mode == PogoConst.SINGLE_CLASS && vc10Btn.isSelected()) {
@@ -871,6 +891,12 @@ public class GenerateDialog extends JDialog {
             if (!file.renameTo(new File(file.toString() + ".bck")))
                 System.err.println("Cannot rename " + file);
         }
+        if (overwriteWinCMakeLists) {
+            //  Rename CMakeLists to be overwritten by XTend
+            File file = new File(path + "/" + cMakeLists);
+            if (!file.renameTo(new File(file.toString() + ".bck")))
+                System.err.println("Cannot rename " + file);
+        }
         if (overwriteVC12) {
             //  Rename vc12_proj to be overwritten by XTend
             File file = new File(path + "/vc12_proj");
@@ -889,6 +915,7 @@ public class GenerateDialog extends JDialog {
     //======================================================
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton winCMakeListsBtn;
     private javax.swing.JRadioButton cMakeListsBtn;
     private javax.swing.JRadioButton codeBtn;
     private javax.swing.JLabel docLabel;
